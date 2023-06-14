@@ -1,5 +1,6 @@
 #include "../include/searchengine.hpp"
 #include <string>
+#include <fstream>
 
 using std::string;
 
@@ -13,4 +14,19 @@ string SearchEngine::normalizeWord(string word) {
         }
     }
     return normalizedWord;
+}
+
+void SearchEngine::InvertedIndex(vector<string>& words, string filename, set<string>& wordbook) {
+    fstream file;
+    filename = "../documents/" + filename;
+    file.open(filename.c_str(), fstream::in | fstream::out);
+    string word;
+    if(file.is_open()) {
+        while(file >> word) {
+            word = normalizeWord(word);
+            words.push_back(word);
+            wordbook.insert(word);
+        }
+        file.close();
+    }
 }
