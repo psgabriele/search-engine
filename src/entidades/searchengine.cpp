@@ -1,6 +1,7 @@
 #include "../include/searchengine.hpp"
 #include <string>
 #include <fstream>
+#include <algorithm>
 
 using std::string;
 
@@ -29,4 +30,35 @@ void SearchEngine::InvertedIndex(vector<string>& words, string filename, set<str
         }
         file.close();
     }
+}
+
+vector<string> SearchEngine::retrieveDocuments(const vector<string>& queryWords) {
+    map<string, int> documentScores;
+
+    for (const auto& word : queryWords) {
+        if (invertedIndex.count(word) > 0) {
+            const auto& documents = invertedIndex.at(word);
+            for (const auto& document : documents) {
+                const string& documentName = document.first;
+                int score = document.second;
+
+                documentScores[documentName] += score;
+            }
+        }
+    }
+
+    vector<pair<string, int>> sortedDocuments(documentScores.begin(), documentScores.end());
+    sort(sortedDocuments.begin(), sortedDocuments.end(), [](const pair<string, int>& a, const pair<string, int>& b) {
+        if (a.second == b.second) {
+            return a.first < b.first;
+        }
+        return a.second > b.second;
+    });
+
+    vector<string> relevantDocuments;
+    for (const auto& document : sortedDocuments) {
+        relevantDocuments.push_back(document.first);
+    }
+
+    return relevantDocuments;
 }
