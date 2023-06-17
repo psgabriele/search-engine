@@ -4,8 +4,10 @@
 #include <algorithm>
 
 using std::string;
+using std::map;
 
 using namespace std;
+
 
 string SearchEngine::normalizeWord(string word) {
     string normalizedWord;
@@ -17,22 +19,22 @@ string SearchEngine::normalizeWord(string word) {
     return normalizedWord;
 }
 
-void SearchEngine::InvertedIndex(vector<string>& words, string filename, set<string>& wordbook) {
-    fstream file;
-    filename = "../documents/" + filename;
-    file.open(filename.c_str(), fstream::in | fstream::out);
-    string word;
-    if(file.is_open()) {
-        while(file >> word) {
+void SearchEngine::InvertedIndex(vector<string>& files, string folderPath, set<string>& wordbook) {
+    for (const auto& filename : files) {
+        string filepath = folderPath + "/" + filename;
+        ifstream file(filepath);
+        string word;
+        while (file >> word) {
             word = normalizeWord(word);
-            words.push_back(word);
             wordbook.insert(word);
+            invertedIndex[word][filename]++;
         }
-        file.close();
     }
 }
 
+
 vector<string> SearchEngine::retrieveDocuments(const vector<string>& queryWords) {
+    map<string, int> documentCounts;
     map<string, int> documentScores;
 
     for (const auto& word : queryWords) {
@@ -42,12 +44,19 @@ vector<string> SearchEngine::retrieveDocuments(const vector<string>& queryWords)
                 const string& documentName = document.first;
                 int score = document.second;
 
+                documentCounts[documentName]++;
                 documentScores[documentName] += score;
             }
         }
     }
 
-    vector<pair<string, int>> sortedDocuments(documentScores.begin(), documentScores.end());
+    vector<pair<string, int>> sortedDocuments;
+    for (const auto& document : documentCounts) {
+        if (document.second == queryWords.size()) {
+            sortedDocuments.push_back({document.first, documentScores[document.first]});
+        }
+    }
+
     sort(sortedDocuments.begin(), sortedDocuments.end(), [](const pair<string, int>& a, const pair<string, int>& b) {
         if (a.second == b.second) {
             return a.first < b.first;

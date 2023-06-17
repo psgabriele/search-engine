@@ -1,4 +1,5 @@
 #include "./include/searchengine.hpp"
+#include <filesystem>
 #include <iostream>
 #include <vector>
 #include <string>
@@ -8,9 +9,15 @@ using namespace std;
 
 int main() {
     SearchEngine searchEngine;
-    string folderPath = "./documents";
+    string folderPath = "documents";
 
     vector<string> files;
+    for (const auto& entry : std::filesystem::directory_iterator(folderPath)) {
+        if (entry.is_regular_file()) {
+            files.push_back(entry.path().filename());
+        }
+    }
+
     set<string> wordbook;
     searchEngine.InvertedIndex(files, folderPath, wordbook);
 
@@ -27,9 +34,13 @@ int main() {
 
     vector<string> relevantDocuments = searchEngine.retrieveDocuments(queryWords);
 
-    cout << "Documentos relevantes:" << endl;
-    for (const auto& doc : relevantDocuments) {
-        cout << doc << endl;
+    if (relevantDocuments.empty()) {
+        cout << "Nenhum documento encontrado." << endl;
+    } else {
+        cout << "Documentos relevantes:" << endl;
+        for (const auto& doc : relevantDocuments) {
+            cout << doc << endl;
+        }
     }
 
     return 0;
